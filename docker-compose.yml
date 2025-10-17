@@ -1,0 +1,61 @@
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:latest
+    container_name: echospace-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    networks:
+      - echospace-network
+
+  # Flask Backend
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: echospace-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+      - /app/__pycache__
+    environment:
+      - FLASK_ENV=development
+      - MONGODB_URI=mongodb://admin:password@mongodb:27017/echospace
+    depends_on:
+      - mongodb
+    networks:
+      - echospace-network
+
+  # React Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: echospace-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+    networks:
+      - echospace-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  echospace-network:
+    driver: bridge
