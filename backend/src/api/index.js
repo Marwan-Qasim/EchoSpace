@@ -29,4 +29,4 @@ app.use('/api/messages', messageRoute);
 //     console.log('Server is running on port', PORT);
 // });
 
-export default app;
+export const handler = serverless(app);
