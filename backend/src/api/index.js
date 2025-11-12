@@ -2,8 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import authRoute from './routes/auth.route.js';
-import messageRoute from './routes/message.route.js';
+import authRoute from '../routes/auth.route.js';
+import messageRoute from '../routes/message.route.js';
 
 dotenv.config();
 
@@ -28,3 +28,5 @@ app.use('/api/messages', messageRoute);
 app.listen(PORT, () => {
     console.log('Server is running on port', PORT);
 });
+
+export default app;
