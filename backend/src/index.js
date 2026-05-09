@@ -2,8 +2,9 @@ import express from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import authRoute from '../routes/auth.route.js';
-import messageRoute from '../routes/message.route.js';
+import authRoute from './routes/auth.route.js';
+import messageRoute from './routes/message.route.js';
+import {connectDB} from './lib/db.js';
 
 dotenv.config();
 
@@ -15,6 +16,8 @@ const PORT = process.env.PORT || 5000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+app.use(express.json());
+
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '/frontend/dist')));
     app.get('*', (req, res) =>
@@ -25,8 +28,8 @@ if (process.env.NODE_ENV === 'production') {
 app.use('/api/auth', authRoute);
 app.use('/api/messages', messageRoute);
 
-// app.listen(PORT, () => {
-//     console.log('Server is running on port', PORT);
-// });
+app.listen(PORT, () => {
+    console.log('Server is running on port', PORT);
+    connectDB();
+});
 
-export const handler = serverless(app);
