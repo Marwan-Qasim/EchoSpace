@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoute from './routes/auth.route.js';
 import messageRoute from './routes/message.route.js';
+import {connectDB} from './lib/db.js';
 
 dotenv.config();
 
@@ -15,9 +16,11 @@ const PORT = process.env.PORT || 5000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+app.use(express.json());
+
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '/frontend/dist')));
-    app.get('*', (_, res) =>
+    app.get('*', (req, res) =>
         res.sendFile(path.resolve(__dirname, 'frontend', 'dist', 'index.html'))
     );
 }
@@ -27,4 +30,6 @@ app.use('/api/messages', messageRoute);
 
 app.listen(PORT, () => {
     console.log('Server is running on port', PORT);
+    connectDB();
 });
+
