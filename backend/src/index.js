@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import authRoute from './routes/auth.route.js';
 import messageRoute from './routes/message.route.js';
 import {connectDB} from './lib/db.js';
+import cookieParser from 'cookie-parser';
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(express.json());
+app.use(cookieParser());
 
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '/frontend/dist')));
