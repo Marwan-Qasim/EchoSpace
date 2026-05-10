@@ -1,8 +1,13 @@
 import express from 'express';
-const router = express.Router();
+import { getAllContacts, getMessagesByUserId, sendMessage } from '../controllers/message.controller.js';
+import { protectRoute } from '../middleware/auth.middleware.js';
+import { arcjetProtection } from '../middleware/arcjet.middleware.js';
 
-router.get('/', (req, res) => {
-    res.send('Auth route working');
-});
+const router = express.Router();
+router.use(arcjetProtection, protectRoute);
+
+router.get("/contacts", getAllContacts);
+router.get("/:id", getMessagesByUserId);
+router.post("/send/:id", sendMessage);
 
 export default router;
