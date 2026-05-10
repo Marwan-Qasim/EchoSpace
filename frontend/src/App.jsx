@@ -45,11 +45,7 @@ function App() {
     <Routes>
       <Route
         path="/"
-        element={
-          <GuestRoute>
-            <IntroductionPage />
-          </GuestRoute>
-        }
+        element={<IntroductionPage />}
       />
       <Route
         path="/login"

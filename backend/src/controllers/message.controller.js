@@ -115,3 +115,38 @@ export const getChatPartners = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const deleteConversation = async (req, res) => {
+  try {
+    if (!req.user?._id) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const myId = req.user._id;
+    const { id: otherUserId } = req.params;
+
+    if (myId.equals(otherUserId)) {
+      return res.status(400).json({ message: "Cannot delete conversation with yourself." });
+    }
+
+    const userExists = await User.exists({ _id: otherUserId });
+    if (!userExists) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const result = await Message.deleteMany({
+      $or: [
+        { senderId: myId, receiverId: otherUserId },
+        { senderId: otherUserId, receiverId: myId },
+      ],
+    });
+
+    res.status(200).json({
+      message: "Conversation deleted successfully.",
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error("Error in deleteConversation: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

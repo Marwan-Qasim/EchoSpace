@@ -4,7 +4,12 @@ import MessageBubble from "./MessageBubble.jsx";
 import MessageInput from "./MessageInput.jsx";
 
 const ChatArea = () => {
-  const { selectedUser, messages, getMessages, isMessagesLoading } = useChatStore();
+  const {
+    selectedUser,
+    messages,
+    getMessages,
+    isMessagesLoading,
+  } = useChatStore();
   const messagesEndRef = useRef(null);
 
   useEffect(() => {

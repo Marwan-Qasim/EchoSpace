@@ -6,8 +6,8 @@ import ChatArea from "../components/ChatArea.jsx";
 import NoChatSelected from "../components/NoChatSelected.jsx";
 
 const ChatPage = () => {
-  const { authUser } = useAuthStore();
-  const { selectedUser } = useChatStore();
+  const { authUser, socket } = useAuthStore();
+  const { selectedUser, subscribeToMessages, unsubscribeFromMessages } = useChatStore();
   const { connectSocket, disconnectSocket } = useAuthStore();
 
   useEffect(() => {
@@ -19,6 +19,16 @@ const ChatPage = () => {
       disconnectSocket();
     };
   }, [authUser, connectSocket, disconnectSocket]);
+
+  useEffect(() => {
+    if (!authUser || !socket) return;
+
+    subscribeToMessages();
+
+    return () => {
+      unsubscribeFromMessages();
+    };
+  }, [authUser, socket, subscribeToMessages, unsubscribeFromMessages]);
 
   return (
     <div className="h-screen bg-black flex">

@@ -8,6 +8,7 @@ export const useChatStore = create((set, get) => ({
   allContacts: [],
   chats: [],
   messages: [],
+  unreadCounts: {},
   activeTab: "chats",
   selectedUser: null,
   isContactsLoading: false,
@@ -17,17 +18,29 @@ export const useChatStore = create((set, get) => ({
   setActiveTab: (tab) => set({ activeTab: tab }),
 
   setSelectedUser: (selectedUser) =>
-    set({ selectedUser }),
+    set((state) => {
+      if (!selectedUser?._id) return { selectedUser };
+      return {
+        selectedUser,
+        unreadCounts: {
+          ...state.unreadCounts,
+          [selectedUser._id]: 0,
+        },
+      };
+    }),
 
   getContacts: async () => {
     set({ isContactsLoading: true, isUsersLoading: true });
 
     try {
-      const res = await axiosInstance.get("/messages/contacts");
-
+      const [contactsRes, chatsRes] = await Promise.all([
+        axiosInstance.get("/messages/contacts"),
+        axiosInstance.get("/messages/chats"),
+      ]);
       set({
-        contacts: res.data,
-        allContacts: res.data,
+        contacts: contactsRes.data,
+        allContacts: contactsRes.data,
+        chats: chatsRes.data,
       });
     } catch (error) {
       toast.error(
@@ -81,10 +94,10 @@ export const useChatStore = create((set, get) => ({
   getMessagesByUserId: async (userId) => get().getMessages(userId),
 
   sendMessage: async (messageData) => {
-    const { selectedUser, messages } = get();
+    const { selectedUser } = get();
     const { authUser } = useAuthStore.getState();
 
-    if (!selectedUser || !authUser) return;
+    if (!selectedUser || !authUser) return false;
 
     const tempId = `temp-${Date.now()}`;
 
@@ -98,10 +111,21 @@ export const useChatStore = create((set, get) => ({
       isOptimistic: true,
     };
 
-    // immediately update UI
-    set({
-      messages: [...messages, optimisticMessage],
-    });
+    // immediately update UI with optimistic message
+    set((state) => ({
+      messages: [...state.messages, optimisticMessage],
+    }));
+
+    // move this user to chats instantly if this is first message
+    const currentChats = get().chats;
+    const alreadyInChats = currentChats.some(
+      (chatUser) => chatUser._id?.toString?.() === selectedUser._id?.toString?.()
+    );
+    if (!alreadyInChats) {
+      set({
+        chats: [selectedUser, ...currentChats],
+      });
+    }
 
     try {
       const res = await axiosInstance.post(
@@ -109,31 +133,97 @@ export const useChatStore = create((set, get) => ({
         messageData
       );
 
-      set({
-        messages: [...messages, res.data],
-      });
+      set((state) => ({
+        messages: state.messages.map((msg) =>
+          msg._id === tempId ? res.data : msg
+        ),
+      }));
+
+      return true;
     } catch (error) {
-      // rollback optimistic update
-      set({
-        messages: messages,
-      });
+      // rollback optimistic message
+      set((state) => ({
+        messages: state.messages.filter((msg) => msg._id !== tempId),
+        chats: alreadyInChats
+          ? state.chats
+          : state.chats.filter(
+              (chatUser) =>
+                chatUser._id?.toString?.() !== selectedUser._id?.toString?.()
+            ),
+      }));
 
       toast.error(
         error.response?.data?.message || "Something went wrong"
       );
+
+      return false;
+    }
+  },
+
+  deleteConversation: async (userId) => {
+    const { selectedUser, chats } = get();
+
+    try {
+      await axiosInstance.delete(`/messages/conversation/${userId}`);
+
+      const updatedChats = chats.filter((chatUser) => chatUser._id !== userId);
+      const shouldClearSelectedUser = selectedUser?._id === userId;
+
+      set({
+        chats: updatedChats,
+        selectedUser: shouldClearSelectedUser ? null : selectedUser,
+        messages: shouldClearSelectedUser ? [] : get().messages,
+        unreadCounts: {
+          ...get().unreadCounts,
+          [userId]: 0,
+        },
+      });
+
+      toast.success("Chat deleted");
+      return true;
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to delete chat");
+      return false;
     }
   },
 
   subscribeToMessages: () => {
-    const { selectedUser } = get();
-
-    if (!selectedUser) return;
-
     const socket = useAuthStore.getState().socket;
 
     if (!socket) return;
 
+    socket.off("newMessage");
+
     socket.on("newMessage", (newMessage) => {
+      const { selectedUser, chats, allContacts, unreadCounts } = get();
+      const { authUser } = useAuthStore.getState();
+      const isIncoming = newMessage.receiverId?.toString?.() === authUser?._id?.toString?.();
+
+      if (isIncoming) {
+        const senderId = newMessage.senderId?.toString?.();
+        const alreadyInChats = chats.some(
+          (chatUser) => chatUser._id?.toString?.() === senderId
+        );
+        if (!alreadyInChats) {
+          const senderContact = allContacts.find((contact) => contact._id === senderId);
+          if (senderContact) {
+            set({ chats: [senderContact, ...chats] });
+          }
+        }
+
+        const isSelectedSender = selectedUser?._id?.toString?.() === senderId;
+        if (!isSelectedSender && senderId) {
+          set({
+            unreadCounts: {
+              ...unreadCounts,
+              [senderId]: (unreadCounts[senderId] || 0) + 1,
+            },
+          });
+        }
+      }
+
+      if (!selectedUser?._id) return;
+
       const isMessageSentFromSelectedUser =
         newMessage.senderId?.toString?.() === selectedUser._id.toString();
 

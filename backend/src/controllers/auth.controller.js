@@ -3,6 +3,7 @@ import User from "../models/user.js";
 import { generateToken } from "../lib/utils.js";
 import bcrypt from "bcryptjs";
 import { ENV } from "../lib/env.js";
+import cloudinary from "../lib/cloudinary.js";
 
 export const signup = async (req, res) => {
 
@@ -129,20 +130,38 @@ export const logout = (_, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { profilePic } = req.body;
-    if (!profilePic) return res.status(400).json({ message: "Profile pic is required" });
+    const { profilePic, fullName } = req.body;
+    const hasProfilePic = typeof profilePic === "string" && profilePic.trim() !== "";
+    const hasFullName = typeof fullName === "string" && fullName.trim() !== "";
+
+    if (!hasProfilePic && !hasFullName) {
+      return res.status(400).json({ message: "Please provide a name or profile picture" });
+    }
 
     const userId = req.user._id;
+    const updateData = {};
 
-    const uploadResponse = await cloudinary.uploader.upload(profilePic);
+    if (hasFullName) {
+      updateData.fullName = fullName.trim();
+    }
+
+    if (hasProfilePic) {
+      const uploadResponse = await cloudinary.uploader.upload(profilePic);
+      updateData.profilePic = uploadResponse.secure_url;
+    }
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { profilePic: uploadResponse.secure_url },
+      updateData,
       { new: true }
     );
 
-    res.status(200).json(updatedUser);
+    res.status(200).json({
+      _id: updatedUser._id,
+      fullName: updatedUser.fullName,
+      email: updatedUser.email,
+      profilePic: updatedUser.profilePic,
+    });
   } catch (error) {
     console.log("Error in update profile:", error);
     res.status(500).json({ message: "Internal server error" });

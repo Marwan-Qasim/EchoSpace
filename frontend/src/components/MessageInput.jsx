@@ -18,6 +18,13 @@ const MessageInput = () => {
       return;
     }
 
+    const maxFileSize = 8 * 1024 * 1024; // 8MB
+    if (file.size > maxFileSize) {
+      toast.error("Image is too large. Please choose one under 8MB.");
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => setImagePreview(reader.result);
     reader.readAsDataURL(file);
@@ -27,15 +34,22 @@ const MessageInput = () => {
     e.preventDefault();
     if (!text.trim() && !imagePreview) return;
 
-    const success = await sendMessage({
+    const messagePayload = {
       text: text.trim(),
       image: imagePreview,
-    });
+    };
 
-    if (success) {
-      setText("");
-      setImagePreview(null);
-      if (fileRef.current) fileRef.current.value = "";
+    // clear input immediately for instant UX
+    setText("");
+    setImagePreview(null);
+    if (fileRef.current) fileRef.current.value = "";
+
+    const success = await sendMessage(messagePayload);
+
+    if (!success) {
+      // restore message if sending failed
+      setText(messagePayload.text || "");
+      setImagePreview(messagePayload.image || null);
     }
   };
 
