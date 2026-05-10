@@ -18,10 +18,12 @@ export const useAuthStore = create((set, get) => ({
     try {
       const res = await axiosInstance.get("/auth/check");
       set({ authUser: res.data });
+      localStorage.setItem("authToken", res.data.token || "");
       get().connectSocket();
     } catch (error) {
       console.log("Error in authCheck:", error);
       set({ authUser: null });
+      localStorage.removeItem("authToken");
     } finally {
       set({ isCheckingAuth: false });
     }
@@ -32,6 +34,7 @@ export const useAuthStore = create((set, get) => ({
     try {
       const res = await axiosInstance.post("/auth/signup", data);
       set({ authUser: res.data });
+      localStorage.setItem("authToken", res.data.token || "");
 
       toast.success("Account created successfully!");
       get().connectSocket();
@@ -47,6 +50,7 @@ export const useAuthStore = create((set, get) => ({
     try {
       const res = await axiosInstance.post("/auth/login", data);
       set({ authUser: res.data });
+      localStorage.setItem("authToken", res.data.token || "");
 
       toast.success("Logged in successfully");
 
@@ -62,6 +66,7 @@ export const useAuthStore = create((set, get) => ({
     try {
       await axiosInstance.post("/auth/logout");
       set({ authUser: null });
+      localStorage.removeItem("authToken");
       toast.success("Logged out successfully");
       get().disconnectSocket();
     } catch (error) {
@@ -90,8 +95,12 @@ export const useAuthStore = create((set, get) => ({
     const { authUser } = get();
     if (!authUser || get().socket?.connected) return;
 
+    const token = localStorage.getItem("authToken");
     const socket = io(BASE_URL, {
-      withCredentials: true, // this ensures cookies are sent with the connection
+      auth: {
+        token: token,
+      },
+      withCredentials: true,
     });
 
     socket.connect();

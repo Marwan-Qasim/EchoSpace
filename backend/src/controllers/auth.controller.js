@@ -42,13 +42,14 @@ export const signup = async (req, res) => {
 
         if (newUser) {
             const savedUser = await newUser.save();
-            generateToken(savedUser._id, res);
+            const token = generateToken(savedUser._id, res);
 
             res.status(201).json({
                 _id: newUser._id,
                 fullName: newUser.fullName,
                 email: newUser.email,
-                profilePic: newUser.profilePic
+                profilePic: newUser.profilePic,
+                token: token
             });
 
             try {
@@ -110,13 +111,14 @@ export const login = async (req, res) => {
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) return res.status(400).json({ message: "Invalid credentials" });
 
-    generateToken(user._id, res);
+    const token = generateToken(user._id, res);
 
     res.status(200).json({
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
       profilePic: user.profilePic,
+      token: token,
     });
   } catch (error) {
     console.error("Error in login controller:", error);
@@ -157,11 +159,14 @@ export const updateProfile = async (req, res) => {
       { new: true }
     );
 
+    const token = generateToken(userId, res);
+
     res.status(200).json({
       _id: updatedUser._id,
       fullName: updatedUser.fullName,
       email: updatedUser.email,
       profilePic: updatedUser.profilePic,
+      token: token,
     });
   } catch (error) {
     console.log("Error in update profile:", error);
