@@ -4,7 +4,6 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-
     "build": "npm install --prefix frontend && npm install --prefix backend && npm run build --prefix frontend",
     "start": "npm run start --prefix backend"
   },
@@ -18,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/voisnoa/EchoSpace/issues"
   },
-  "homepage": "https://github.com/voisnoa/EchoSpace#readme"
+  "homepage": "https://github.com/voisnoa/EchoSpace#readme",
+  "dependencies": {
+    "cors": "^2.8.6"
+  }
 }
