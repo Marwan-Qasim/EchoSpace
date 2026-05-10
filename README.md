@@ -2,6 +2,8 @@
 
 EchoSpace is a full-stack real-time chat app built with React, Vite, Node.js, Express, MongoDB, and Socket.IO. It lets users create an account, log in, update their profile, and chat with other users in real time, including image messages.
 
+Live app: https://echo-space-xtbt.vercel.app
+
 ## What the project does
 
 - User signup and login
