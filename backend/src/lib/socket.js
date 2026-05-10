@@ -10,7 +10,7 @@ export function setupSocket(server) {
 
   io = new Server(server, {
     cors: {
-      origin: [ENV.CLIENT_URL],
+      origin: [ENV.CLIENT_URL, 'http://localhost:5173', 'https://echo-space-xtbt.vercel.app'],
       credentials: true,
     },
   });

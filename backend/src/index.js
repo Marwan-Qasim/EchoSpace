@@ -26,7 +26,7 @@ app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ extended: true, limit: "15mb" }));
 app.use(cookieParser());
 app.use(cors({
-    origin: ENV.CLIENT_URL || 'http://localhost:5173',
+    origin: [ENV.CLIENT_URL || 'http://localhost:5173', 'https://echo-space-xtbt.vercel.app'],
     credentials: true,
 }));
 
