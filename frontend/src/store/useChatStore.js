@@ -190,11 +190,17 @@ export const useChatStore = create((set, get) => ({
   subscribeToMessages: () => {
     const socket = useAuthStore.getState().socket;
 
-    if (!socket) return;
+    if (!socket) {
+      console.warn("⚠️ Socket not available for subscribing to messages");
+      return;
+    }
+
+    console.log("📡 Subscribing to newMessage events...");
 
     socket.off("newMessage");
 
     socket.on("newMessage", (newMessage) => {
+      console.log("📨 New message received:", newMessage);
       const { selectedUser, chats, allContacts, unreadCounts } = get();
       const { authUser } = useAuthStore.getState();
       const isIncoming = newMessage.receiverId?.toString?.() === authUser?._id?.toString?.();

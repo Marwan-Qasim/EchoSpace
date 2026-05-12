@@ -101,14 +101,31 @@ export const useAuthStore = create((set, get) => ({
         token: token,
       },
       withCredentials: true,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5,
     });
 
-    socket.connect();
+    console.log("🔌 Attempting to connect socket...");
+
+    socket.on("connect", () => {
+      console.log("✅ Socket connected successfully", socket.id);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("❌ Socket disconnected");
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error("🔴 Socket connection error:", error);
+    });
 
     set({ socket });
 
     // listen for online users event
     socket.on("getOnlineUsers", (userIds) => {
+      console.log("👥 Online users:", userIds);
       set({ onlineUsers: userIds });
     });
   },
