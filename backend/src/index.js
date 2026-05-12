@@ -32,15 +32,15 @@ app.use(cors({
 
 setupSocket(server);
 
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '/frontend/dist')));
-    app.get('*', (req, res) =>
-        res.sendFile(path.resolve(__dirname, 'frontend', 'dist', 'index.html'))
-    );
-}
-
 app.use('/api/auth', authRoute);
 app.use('/api/messages', messageRoute);
+
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../../frontend/dist')));
+    app.get('*', (req, res) =>
+        res.sendFile(path.resolve(__dirname, '../../frontend/dist', 'index.html'))
+    );
+}
 
 app.use((err, req, res, next) => {
     if (err?.type === "entity.too.large") {
