@@ -17,7 +17,6 @@ router.put("/update-profile", arcjetProtection, protectRoute, updateProfile);
 
 router.get("/check", protectRoute, (req, res) => {
   // Generate fresh token for check endpoint
-  const { generateToken } = await import("../lib/utils.js");
   const token = generateToken(req.user._id, res);
   res.status(200).json({
     ...req.user.toObject(),
