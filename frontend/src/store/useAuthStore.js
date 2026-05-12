@@ -103,7 +103,7 @@ export const useAuthStore = create((set, get) => ({
       withCredentials: true,
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
+      reconnectionDelayMax: 1000,
       reconnectionAttempts: 5,
     });
 
