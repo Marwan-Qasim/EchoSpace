@@ -113,9 +113,11 @@ const Sidebar = () => {
             : "hover:bg-gray-900 border-l-2 border-transparent"
         }`}
       >
-        <button
+        <div
           onClick={() => setSelectedUser(user)}
-          className="flex-1 min-w-0 flex items-center gap-3 px-4 py-3 text-left"
+          className="flex-1 min-w-0 flex items-center gap-3 px-4 py-3 text-left cursor-pointer"
+          role="button"
+          tabIndex={0}
         >
           <div className="relative">
             <button
@@ -141,7 +143,7 @@ const Sidebar = () => {
             <p className="text-white text-sm font-medium truncate">{user.fullName}</p>
             <p className="text-gray-500 text-xs">{isOnline ? "Online" : "Offline"}</p>
           </div>
-        </button>
+        </div>
         {activeTab === "chats" && unreadCount > 0 && (
           <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-black whitespace-nowrap">
             {unreadLabel}
